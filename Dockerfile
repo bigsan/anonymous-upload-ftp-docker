@@ -1,23 +1,20 @@
 FROM alpine:latest
 
-# Install vsftpd
-RUN apk add --no-cache vsftpd
+# Install proftpd
+RUN apk add --no-cache proftpd
 
-# Create FTP user and directories
-RUN adduser -D -s /bin/false ftpuser && \
-    mkdir -p /var/ftp/pub && \
-    chown -R ftpuser:ftpuser /var/ftp && \
-    chmod 755 /var/ftp && \
-    chmod 777 /var/ftp/pub
+# Create FTP directories and runtime directories
+RUN mkdir -p /var/ftp && \
+    mkdir -p /run/proftpd && \
+    mkdir -p /var/log && \
+    chown -R ftp:ftp /var/ftp && \
+    chmod 777 /var/ftp
 
-# Create vsftpd configuration
-COPY vsftpd.conf /etc/vsftpd/vsftpd.conf
-
-# Create directory for uploads
-RUN mkdir -p /var/log/vsftpd
+# Create proftpd configuration
+COPY proftpd.conf /etc/proftpd/proftpd.conf
 
 # Expose FTP ports
 EXPOSE 20 21 21100-21110
 
-# Start vsftpd
-CMD ["/usr/sbin/vsftpd", "/etc/vsftpd/vsftpd.conf"]
+# Start proftpd
+CMD ["proftpd", "--nodaemon"]

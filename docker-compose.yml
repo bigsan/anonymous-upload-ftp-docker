@@ -5,7 +5,7 @@ services:
       - "21:21"
       - "21100-21110:21100-21110"
     volumes:
-      - ./ftp-data:/var/ftp/pub
+      - ./ftp-data:/var/ftp
     environment:
       - PASV_MIN_PORT=21100
       - PASV_MAX_PORT=21110
