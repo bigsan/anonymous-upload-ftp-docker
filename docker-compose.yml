@@ -1,6 +1,9 @@
 services:
-  ftpserver:
-    build: .
+  # ProFTPD server - Allows anonymous uploads to root directory (/)
+  ftpserver-proftpd:
+    build:
+      context: .
+      dockerfile: Dockerfile.proftpd
     ports:
       - "21:21"
       - "21100-21110:21100-21110"
@@ -10,14 +13,32 @@ services:
       - PASV_MIN_PORT=21100
       - PASV_MAX_PORT=21110
     restart: unless-stopped
-    container_name: ftp-server
+    container_name: ftp-server-proftpd
+    profiles:
+      - proftpd
+
+  # vsftpd server - Allows anonymous uploads to /pub subdirectory
+  ftpserver-vsftpd:
+    build:
+      context: .
+      dockerfile: Dockerfile.vsftpd
+    ports:
+      - "21:21"
+      - "21100-21110:21100-21110"
+    volumes:
+      - ./ftp-data:/var/ftp/pub
+    environment:
+      - PASV_MIN_PORT=21100
+      - PASV_MAX_PORT=21110
+    restart: unless-stopped
+    container_name: ftp-server-vsftpd
+    profiles:
+      - vsftpd
 
   # Test client for verification
   ftp-test:
     image: alpine:latest
     command: sleep infinity
-    depends_on:
-      - ftpserver
     volumes:
       - ./test-files:/test-files
     container_name: ftp-test-client

@@ -1,29 +1,48 @@
 # FTP Server Setup Guide
 
-This document outlines the steps completed to create a containerized FTP server with anonymous upload capabilities.
+This document outlines the steps completed to create containerized FTP servers with anonymous upload capabilities.
 
 ## Overview
 
-Created a Docker-based FTP server using vsftpd that allows anonymous users to upload files without authentication.
+Created two Docker-based FTP server solutions:
+1. **vsftpd** - Allows anonymous uploads to `/pub` subdirectory
+2. **ProFTPD** - Allows anonymous uploads directly to root directory (`/`)
+
+## Available Solutions
+
+### Solution 1: vsftpd (Traditional)
+- **Upload Directory**: `/pub` subdirectory
+- **Security**: Uses vsftpd's built-in chroot security
+- **Best For**: Standard FTP setups with directory structure
+
+### Solution 2: ProFTPD (Flexible)
+- **Upload Directory**: Root directory (`/`)
+- **Security**: Configurable security policies
+- **Best For**: Direct root uploads without subdirectories
 
 ## Files Created
 
-### 1. Dockerfile
+### 1. Dockerfile.vsftpd
 - Base image: Alpine Linux
 - Installed vsftpd FTP server
 - Created FTP user and directory structure
-- Configured permissions for anonymous uploads
+- Configured permissions for anonymous uploads to `/pub`
 
-### 2. docker-compose.yml
-- FTP server service with port mappings (21, 21100-21110)
+### 2. Dockerfile.proftpd
+- Base image: Alpine Linux
+- Installed ProFTPD server
+- Created FTP directories and runtime environment
+- Configured permissions for anonymous uploads to root
+
+### 3. docker-compose.yml
+- Two FTP server services using Docker profiles
+- Port mappings (21, 21100-21110)
 - Volume mapping for persistent storage
 - Test client container for verification
 
-### 3. vsftpd.conf
-- Enabled anonymous access
-- Configured upload permissions
-- Set passive mode port range
-- Disabled local user authentication
+### 4. Configuration Files
+- **vsftpd.conf**: vsftpd server configuration
+- **proftpd.conf**: ProFTPD server configuration
 
 ## Setup Steps
 
@@ -33,34 +52,52 @@ Created a Docker-based FTP server using vsftpd that allows anonymous users to up
    echo "Test file for FTP upload" > test-files/test.txt
    ```
 
-2. **Build and start containers**
-   ```bash
-   docker compose up -d --build
-   ```
+2. **Choose and start a solution**
 
-3. **Test FTP upload**
-   ```bash
-   docker exec ftp-test-client sh -c "apk add --no-cache lftp && lftp -c 'open ftp://ftpserver:21; user anonymous \"\"; cd pub; put /test-files/test.txt; ls; quit'"
-   ```
+### Option A: Start ProFTPD server (root uploads)
+```bash
+docker compose --profile proftpd up -d --build
+```
+
+### Option B: Start vsftpd server (pub uploads)
+```bash
+docker compose --profile vsftpd up -d --build
+```
 
 ## Usage
 
-### Starting the FTP server
+### Starting servers
 ```bash
-docker compose up -d
+# ProFTPD (uploads to root directory)
+docker compose --profile proftpd up -d
+
+# vsftpd (uploads to /pub subdirectory)
+docker compose --profile vsftpd up -d
+
+# Start test client (optional)
+docker compose up ftp-test -d
 ```
 
-### Stopping the FTP server
+### Stopping servers
 ```bash
 docker compose down
 ```
 
-### Connecting to FTP server
+### Connecting to FTP servers
+
+#### ProFTPD Server
 - **Host**: localhost
 - **Port**: 21
 - **Username**: anonymous
 - **Password**: (leave empty)
-- **Upload directory**: /pub
+- **Upload directory**: `/` (root)
+
+#### vsftpd Server
+- **Host**: localhost
+- **Port**: 21
+- **Username**: anonymous
+- **Password**: (leave empty)
+- **Upload directory**: `/pub`
 
 ### File storage
 Uploaded files are stored in the local `ftp-data/` directory on the host machine.
@@ -76,12 +113,24 @@ Uploaded files are stored in the local `ftp-data/` directory on the host machine
 
 The setup includes a test client container that can be used to verify FTP functionality:
 
+### Testing ProFTPD (root uploads)
 ```bash
-# Install FTP client in test container
-docker exec ftp-test-client apk add --no-cache lftp
+# Start ProFTPD and test client
+docker compose --profile proftpd up -d --build
+docker compose up ftp-test -d
 
-# Test upload
-docker exec ftp-test-client lftp -c 'open ftp://ftpserver:21; user anonymous ""; cd pub; put /test-files/test.txt; ls; quit'
+# Test upload to root directory
+docker exec ftp-test-client sh -c "apk add --no-cache lftp && lftp -c 'open ftp://ftp-server-proftpd:21; user anonymous \"\"; ls; put /test-files/test.txt; ls; quit'"
+```
+
+### Testing vsftpd (pub uploads)
+```bash
+# Start vsftpd and test client
+docker compose --profile vsftpd up -d --build
+docker compose up ftp-test -d
+
+# Test upload to /pub directory
+docker exec ftp-test-client sh -c "apk add --no-cache lftp && lftp -c 'open ftp://ftp-server-vsftpd:21; user anonymous \"\"; ls; cd pub; put /test-files/test.txt; ls; quit'"
 ```
 
 ## Security Notes
