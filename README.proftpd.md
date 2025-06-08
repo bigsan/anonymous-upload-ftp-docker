@@ -14,8 +14,8 @@ A containerized ProFTPD server configured for anonymous uploads directly to the 
 
 ```bash
 # Run the server
-docker run -d -p 21:21 -p 20000-20010:20000-20010 \
-  -v $(pwd)/ftp-data:/ftp-data \
+docker run -d -p 21:21 -p 21100-21110:21100-21110 \
+  -v $(pwd)/ftp-data:/var/ftp \
   bigsan/anonymous-ftp-proftpd
 
 # Test upload
@@ -26,8 +26,8 @@ curl -T test.txt ftp://localhost/
 ## Configuration
 
 - **FTP Port**: 21 (control)
-- **Passive Ports**: 20000-20010 (data transfer)
-- **Upload Directory**: `/ftp-data` (container) - mount to host volume
+- **Passive Ports**: 21100-21110 (data transfer)
+- **Upload Directory**: `/var/ftp` (container) - mount to host volume
 - **User**: Anonymous (no password required)
 - **Upload Location**: Root directory (`/`)
 
@@ -39,16 +39,11 @@ services:
     image: bigsan/anonymous-ftp-proftpd
     ports:
       - "21:21"
-      - "20000-20010:20000-20010"
+      - "21100-21110:21100-21110"
     volumes:
-      - ./ftp-data:/ftp-data
+      - ./ftp-data:/var/ftp
     restart: unless-stopped
 ```
-
-## Environment Variables
-
-- `PROFTPD_USER_UID`: UID for FTP user (default: 1000)
-- `PROFTPD_USER_GID`: GID for FTP user (default: 1000)
 
 ## Security Notes
 
