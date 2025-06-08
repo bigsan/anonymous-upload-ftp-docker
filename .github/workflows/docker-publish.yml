@@ -63,6 +63,7 @@ jobs:
       with:
         context: .
         file: ./Dockerfile.proftpd
+        platforms: linux/amd64,linux/arm64
         push: ${{ github.event_name != 'pull_request' }}
         tags: ${{ steps.meta-proftpd.outputs.tags }}
         labels: ${{ steps.meta-proftpd.outputs.labels }}
@@ -74,6 +75,7 @@ jobs:
       with:
         context: .
         file: ./Dockerfile.vsftpd
+        platforms: linux/amd64,linux/arm64
         push: ${{ github.event_name != 'pull_request' }}
         tags: ${{ steps.meta-vsftpd.outputs.tags }}
         labels: ${{ steps.meta-vsftpd.outputs.labels }}
