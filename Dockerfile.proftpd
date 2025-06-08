@@ -13,6 +13,9 @@ RUN mkdir -p /var/ftp && \
 # Create proftpd configuration
 COPY proftpd.conf /etc/proftpd/proftpd.conf
 
+# Copy README for Docker Hub
+COPY README.proftpd.md /README.md
+
 # Expose FTP ports
 EXPOSE 20 21 21100-21110
 

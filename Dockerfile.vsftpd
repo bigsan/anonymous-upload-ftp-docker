@@ -13,6 +13,9 @@ RUN adduser -D -s /bin/false ftpuser && \
 # Create vsftpd configuration
 COPY vsftpd.conf /etc/vsftpd/vsftpd.conf
 
+# Copy README for Docker Hub
+COPY README.vsftpd.md /README.md
+
 # Create directory for uploads
 RUN mkdir -p /var/log/vsftpd
 
